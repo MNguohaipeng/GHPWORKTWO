@@ -1,0 +1,226 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="~/Scripts/jquery-1.10.2.js"></script>
+@Scripts.Render("~/bundles/AngularJS")
+
+<div class="panel panel-primary margin10" ng-app="APP" ng-controller="CTRL">
+    <header class="panel panel-heading">生成表</header>
+
+    <div class="col-md-6">
+        <div class="panel panel-info">
+            <header class="panel-heading">可生成</header>
+            <div class="table-responsive">
+                <table class=" table  ">
+
+                    <thead>
+
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="AllID" class="checkbox" ng-model="select_all" ng-click="selectAll()" />
+                            </th>
+                            <th>
+                                表明
+                            </th>
+
+                            <th>
+                                表类型
+                            </th>
+                            <th>
+                                表说明
+                            </th>
+                            <th>
+                                数据创建时间
+                            </th>
+                        </tr>
+
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="x in KGenerate">
+                            <td><input type="checkbox" name="ID" class="checkbox" value="{{x.GUID}}" ng-checked = "select_one" ng-click="selectOne(m[i.id])" /></td>
+                            <td>{{x.TableName}}</td>
+                            <td>{{x.TableType}}</td>
+                            <td>{{x.TableExplain}}</td>
+                            <td>{{x.CreateTime|Date:'yyyy-MM-dd HH:mm:ss'}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel panel-info">
+            <header class="panel-heading">已生成</header>
+            <div class="table-responsive">
+                <table class="table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                <input type="checkbox" class="checkbox" />
+                            </th>
+
+                            <th>
+                                表明
+                            </th>
+
+                            <th>
+                                表类型
+                            </th>
+
+                        </tr>
+
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="x in KGenerate">
+                            <td><input type="checkbox" class="checkbox" name="FID" value="{{x.ID}}" /></td>
+                            <td>{{x.TableName}}</td>
+                            <td>{{x.TableType}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="panel-footer"><button class="btn  btn-info" ng-click="Jump()">开始生成</button></div>
+</div>
+
+<script>
+
+    var app = angular.module("APP", []);
+
+    //自定义过滤器 jsonDate
+    app.filter("Date", function ($filter) {
+        return function (input, format) {
+            //先得到时间戳
+            var timestamp = Number(input.replace(/\/Date\((\d+)\)\//, "$1"));
+
+            //转成指定格式
+            return $filter("date")(timestamp, format);
+        }
+    });
+
+    app.controller("CTRL", function ($scope, $http) {
+
+        $scope.selectAll = function () {
+            if ($scope.select_all) {
+                $scope.select_one = true;
+                $scope.checked = [];
+                angular.forEach($scope.list, function (i, index) {
+                    $scope.checked.push(i.id);
+                    $scope.m[i.id] = true;
+                })
+            } else {
+                $scope.select_one = false;
+                $scope.checked = [];
+                $scope.m = [];
+            }
+            console.log($scope.checked);
+        };
+        $scope.selectOne = function (select) {
+            angular.forEach($scope.m, function (i, id) {
+                var index = $scope.checked.indexOf(id);
+                if (i && index === -1) {
+                    $scope.checked.push(id);
+                } else if (!i && index !== -1) {
+                    $scope.checked.splice(index, 1);
+                };
+            });
+
+            $scope.NotCheck = 0;
+
+            $("input[name='ID']").each(function () {
+
+                if (!$(this).is(":checked")) {
+                    $scope.select_all = false;
+                    $scope.NotCheck++;
+                }
+
+            })
+
+            if ($scope.NotCheck <= 0) {
+                $scope.select_all = true;
+            }
+ 
+        }
+
+        $scope.CheckAll = function (name, $index) {
+
+            console.log($index);
+
+            if ($index == -1) {
+
+                console.log($("#AllID").is(":checked"));
+
+                if ($("#AllID").is(":checked")) {
+                    $("input[name='" + name + "']").each(function (i, item) {
+                        $(this).attr("checked", true);
+                    })
+                } else {
+                    $("input[name='" + name + "']").each(function (i, item) {
+                        $(this).attr("checked", false);
+                    })
+                }
+
+            } else {
+
+                if ($("#AllID").is(":checked")) {
+                    $("#AllID").click();
+                }
+
+            }
+
+        }
+
+        $scope.KGenerate = [];
+
+        $scope.GetKGenerate = function () {
+            $http({
+                method: 'POST',
+                url: 'GetKGenerate'
+            }).then(function successCallback(response) {
+
+                if (response.data.status == 1) {
+
+                    $scope.KGenerate = response.data.data;
+
+                } else {
+
+                    alert(response.data.msg);
+
+                }
+
+            }, function errorCallback(response) {
+                // 请求失败执行代码
+            });
+
+        }
+
+        $scope.Jump = function () {
+
+            $scope.UData = [];
+
+            $("input[name='ID']").each(function (a, b, c) {
+
+                if ($(b).is(':checked')) {
+
+                    $scope.UData.push({ GUID: $(b).attr("value") });
+
+                }
+
+            })
+
+            location = "SetPage?#Data=" + angular.toJson($scope.UData);
+        }
+
+        $scope.GetKGenerate();
+
+    })
+
+</script>

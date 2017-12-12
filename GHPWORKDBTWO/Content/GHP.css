@@ -1,0 +1,27 @@
+﻿.margin10 {
+    margin: 10px;
+}
+
+.margin1 {
+    margin: 1px;
+}
+
+.margin2 {
+    margin: 10px;
+}
+
+.margin3 {
+    margin: 10px;
+}
+
+.margin5 {
+    margin: 10px;
+}
+
+html {
+    border-radius: 0;
+}
+
+.list-none li {
+list-style:none;
+}

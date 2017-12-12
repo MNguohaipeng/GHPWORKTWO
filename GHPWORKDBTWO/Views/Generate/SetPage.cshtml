@@ -1,0 +1,208 @@
+﻿
+@{
+    ViewBag.Title = "SetPage";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<script src="~/Scripts/angular.js"></script>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <link href="Content/bootstrap.css" rel="stylesheet" />
+</head>
+<body>
+
+    <div class="panel panel-primary margin10" ng-app="APP" ng-controller="CTRL">
+        <header class="panel-heading">配置</header>
+ {{CheckData}}
+        <div>
+            <table class="col-lg-12">
+                <tr >
+
+                    <td>
+                        <ul class=" list-group-item list-none">
+                            <li class="panel panel-info margin10 list-none" ng-repeat="T in TableList">
+
+                                <header class="panel-heading"><input type="checkbox" name="TableData"  value="{{T}}" ng-click="CheckTable()" />{{T.TableName}}</header>
+                                <div>
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th><input type="checkbox" /></th>
+                                                <th>字段名称</th>
+                                                <th>字段类型</th>
+                                                <th>是否主键</th>
+                                                <th>字段说明</th>
+                                                <th>创建时间</th>
+                                            </tr>
+                                        </thead>
+                                        <tr ng-repeat=" i in TableInfo" ng-if="i.Table_GUID==T.GUID">
+                                            <td><input type="checkbox" name="TI{{i.Table_GUID}}" value="{{i}}" ng-click="CheckTableInfo()" /></td>
+                                            <td>{{i.FieldName}}</td>
+                                            <td>{{i.FieldType}}</td>
+                                            <td>{{i.IsPrimarykey}}</td>
+                                            <td>{{i.Explain}}</td>
+                                            <td>{{i.CreateTime|Date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                                        </tr>
+
+                                    </table>
+                                    <div class="margin10">
+                                        <input type="checkbox" />添加
+                                        <input type="checkbox" />修改
+                                        <input type="checkbox" />删除
+                                        <input type="checkbox" />列表
+                                        <button class="btn btn-info">选择</button>
+                                    </div>
+                                </div>
+
+                            </li>
+                        </ul>
+                    </td>
+
+                    <td class="list-group-item">
+                        <ul class="  list-none">
+                            <li class=" margin10 " ng-repeat="x in CheckData">
+                                <div class="panel panel-info">
+                                    <header class="panel-heading">{{x.TableName}}</header>
+                                    <div>
+                                        <table class="table table-responsive">
+                                            <thead>
+                                                <tr>
+                                                    <th><input type="checkbox" /></th>
+                                                    <th>字段名称</th>
+                                                    <th>字段说明</th>
+                                                    <th>创建时间</th>
+                                                </tr>
+                                            </thead>
+                                            <tr ng-repeat="i in x.TableInfo">
+                                                <td><input type="checkbox" /></td>
+                                                <td>{{i.FieldName}}</td>
+                                                <td>{{i.Explain}}</td>
+                                                <td>{{i.CreateTime|Date:'yyyy-MM-dd hh:mm:ss'}}</td>
+                                                <td><span><input type="checkbox" />添加</span><span><input type="checkbox" />删除</span><span><input type="checkbox" />列表</span></td>
+                                            </tr>
+ 
+                                        </table>
+                                        <div class="margin10">
+                                            <input type="checkbox" />添加
+                                            <input type="checkbox" />删除
+                                            <input type="checkbox" />列表
+                                            <button class="btn btn-danger">删除</button>
+                                            <button class="btn btn-success">生成</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+                        <header class="panel-heading"><button class="btn btn-success">全部生成</button></header>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+
+    </div>
+</body>
+</html>
+<script>
+
+    var app = angular.module("APP", []);
+
+    //自定义过滤器 jsonDate
+    app.filter("Date", function ($filter) {
+
+        return function (input, format) {
+            //先得到时间戳
+            var timestamp = Number(input.replace(/\/Date\((\d+)\)\//, "$1"));
+            //转成指定格式
+            return $filter("date")(timestamp, format);
+
+        }
+
+    });
+
+    app.controller("CTRL", function ($scope, $location, $http) {
+
+        $scope.CheckData = [];
+
+        var UrlData = $location.url();
+ 
+        UrlData = UrlData.replace(/%5B/g, "[");
+        UrlData = UrlData.replace(/%7B/g, "{");
+        UrlData = UrlData.replace(/%22/g, '"');
+        UrlData = UrlData.replace(/%7D/g, "}");
+        UrlData = UrlData.replace(/%5D/g, "]");
+        UrlData = UrlData.replace("#Data=", "");
+ 
+        $scope.LoadData = function () {
+            $http({
+                method: 'POST',
+                url: 'GetTableInfo',
+                data: { GUID: UrlData }
+            }).then(function successCallback(response) {
+
+                if (response.data.status == 1) {
+
+                    $scope.TableList = response.data.table;
+
+                    $scope.TableInfo = response.data.data;
+
+                } else {
+
+                    alert(response.data.msg);
+
+                }
+
+            }, function errorCallback(response) {
+                // 请求失败执行代码
+            });
+
+        }
+
+
+        $scope.CheckTable = function () {
+
+            //每进入一次函数就清空一次
+            $scope.CheckData = [];
+
+            $("input[name='TableData']").each(function (i,item) {
+
+                if ($(this).is(":checked")) {
+                    var yuansu = JSON.parse($(item).attr("value"));
+                    yuansu.TableInfo = [];
+             
+                    $scope.CheckData.push(yuansu);
+                }
+
+            })
+
+        }
+
+        $scope.CheckTableInfo = function () {
+
+            var list = $scope.CheckData;
+ 
+            $(list).each(function (i, item) {
+                item.TableInfo = [];
+                $("input[name='TI" + item.GUID + "']").each(function (a, itemtwo) {
+                    if ($(this).is(":checked")) {
+                 
+                        item.TableInfo.push(JSON.parse($(itemtwo).attr("value")));
+                    }
+
+                })
+
+            })
+
+
+        }
+    
+
+       // $scope.CheckData = [{ "Table": "", "Field": [{ "FieldName": "" }] }]
+
+        $scope.LoadData();
+
+    })
+
+</script>

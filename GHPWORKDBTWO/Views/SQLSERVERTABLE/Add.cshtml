@@ -1,0 +1,115 @@
+﻿
+@{
+    ViewBag.Title = "Add";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@Scripts.Render("~/bundles/AngularJS")
+
+<div class="panel panel-primary margin10" ng-app="APP" ng-controller="CTRL">
+    <header class="panel-heading ">添加</header>
+ 
+        <div class="col-sm-12">
+ 
+            <div class="input-group  margin10">
+                <span class="input-group-addon" id="basic-addon1">表名</span>
+                <input type="text" class="form-control" placeholder="Table" aria-describedby="basic-addon1" ng-model="Form.TableName">
+            </div>
+
+            <div class="input-group margin10">
+                <span class="input-group-addon" id="basic-addon1">表类型</span>
+                <select class="form-control input-sm" ng-model="Form.TableType">
+                    <option>123</option>
+                </select>
+            </div>
+
+            <div class="panel panel-danger margin10">
+
+                <header class="panel-heading ">字段信息</header>
+
+                <div ng-repeat="x in FieldList" class="panel panel-danger margin10">
+                    <div class="input-group margin10">
+                        <span class="input-group-addon" id="basic-addon1">字段名</span>
+                        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1" ng-model="x.FieldName">
+                    </div>
+
+                    <div class="input-group margin10">
+                        <span class="input-group-addon" id="basic-addon1">字段类型</span>
+                        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1" ng-model="x.FieldType">
+                    </div>
+
+                    <div class="input-group margin10">
+                        <span class="input-group-addon" id="basic-addon1">说明</span>
+                        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1" ng-model="x.Explain">
+                    </div>
+
+                    <div class="input-group margin10">
+                        <span class="input-group-addon" id="basic-addon1">是否主键</span>
+                        <input type="text" class="form-control" placeholder="Username" aria-describedby="basic-addon1" ng-model="x.IsPrimarykey">
+                    </div>
+                    <header class="panel-footer">
+                        <button type="button" ng-if="$first" class="btn btn-success right" ng-click="AddField()"><i class="glyphicon glyphicon-plus"></i></button>
+                        <button type="button" ng-if="!$first" class="btn btn-danger right" ng-click="RemoveField($index)"><i class="glyphicon glyphicon-minus"></i></button>
+                    </header>
+                </div>
+
+            </div>
+
+
+        </div>
+
+ 
+
+    <header class="panel-footer "><button type="button" ng-click="Insert()" class="btn btn-success">提交</button></header>
+</div>
+
+<script>
+    var app = angular.module("APP", []);
+    app.controller("CTRL", function ($scope, $http) {
+
+        $scope.Form = { "TableName": "", "TableType": "" };
+
+        $scope.FieldList = [{
+            "FieldName": "", "FieldType": "", "Explain": "", "IsPrimarykey": false
+        }];
+ 
+        $scope.AddField = function () {
+
+            $scope.FieldList.push({
+                "FieldName": "", "FieldType": "", "Explain": "", "IsPrimarykey": false
+            });
+        }
+ 
+        $scope.RemoveField = function (index) {
+
+            $scope.FieldList.splice(index, 1);
+
+        }
+
+        $scope.Insert = function () {
+            $http({
+                method: 'POST',
+                url: 'AddTable',
+                data: { Table: angular.toJson($scope.Form), Info: angular.toJson($scope.FieldList) }
+            }).then(function successCallback(response) {
+
+                if (response.data.status == 1) {
+
+                    alert("保存成功");
+
+                } else {
+
+                    alert(response.data.msg);
+
+                }
+
+            }, function errorCallback(response) {
+                // 请求失败执行代码
+            });
+
+        }
+
+
+    })
+
+</script>

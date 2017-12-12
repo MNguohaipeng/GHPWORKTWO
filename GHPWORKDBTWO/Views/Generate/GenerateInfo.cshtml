@@ -1,0 +1,105 @@
+﻿
+@{
+    ViewBag.Title = "Generate";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+ @Scripts.Render("~/bundles/AngularJS")
+ 
+<div class="panel panel-primary" ng-app="APP" ng-controller="CTRL" >
+    <header class="panel-heading">生成详细</header>
+
+    <div class="panel panel-info" >
+        <header class="panel-heading">字段信息</header>
+        <div>
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" class="checkbox" /></th>
+                        <th>字段名</th>
+                        <th>字段类型</th>
+                        <th>字段说明</th>
+                        <th>是否是主键</th>
+                        <th>创建时间</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="x in TableInfo">
+                        <td><input type="checkbox" class="checkbox" name="ID" value="{{x.GUID}}" /></td>
+                        <td>{{x.FieldName}}</td>
+                        <td>{{x.FieldType}}</td>
+                        <td>{{x.Explain}}</td>
+                        <td>{{x.IsPrimarykey}}</td>
+                        <td>{{x.CreateTime|Date:"yyyy-MM-dd HH:mm:ss"}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+
+    var app = angular.module("APP", []);
+    //自定义过滤器 jsonDate
+    app.filter("Date", function ($filter) {
+        return function (input, format) {
+            //先得到时间戳
+            var timestamp = Number(input.replace(/\/Date\((\d+)\)\//, "$1"));
+
+            //转成指定格式
+            return $filter("date")(timestamp, format);
+        }
+    });
+
+    app.controller("CTRL", function ($location,$scope, $http) {
+
+        var UrlData = $location.url();
+        //Data
+        UrlData = UrlData.replace(/%5B/g,"[");
+        UrlData = UrlData.replace(/%7B/g, "{");
+        UrlData = UrlData.replace(/%22/g, '"');
+        UrlData = UrlData.replace(/%7D/g, "}");
+        UrlData = UrlData.replace(/%5D/g, "]");
+        UrlData = UrlData.replace("#Data=","");
+    
+
+
+        $scope.GetInfo = function () {
+
+ 
+            if (UrlData.length < 0) {
+                alert("选中的数据小于0");
+                return;
+            }
+            
+
+            $http({
+
+                method: 'POST',
+                url: 'GetTableInfo',
+                data: { GUID: UrlData }
+            }).then(function successCallback(response) {
+
+                if (response.data.status == 1) {
+
+                    $scope.TableInfo = response.data.data;
+
+                } else {
+
+                    alert(response.data.msg);
+
+                }
+
+            }, function errorCallback(response) {
+                // 请求失败执行代码
+            });
+
+        }
+
+        $scope.GetInfo();
+
+    })
+
+
+</script>
+
